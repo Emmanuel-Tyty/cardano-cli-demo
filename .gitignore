@@ -10,10 +10,11 @@ keys/stake.skey
 # Personal wallet addresses (optional to ignore)
 # keys/*.addr
 
-# Transaction files  
+# Transaction files
 transactions/
 *.raw
 *.signed
+protocol.json
 
 # Container files
 container-files/
