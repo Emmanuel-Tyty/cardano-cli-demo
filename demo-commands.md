@@ -41,59 +41,71 @@ head -c 100 keys/payment.skey && echo "..."
 
 **💡 What You See**: JSON format with cryptographic data (CBOR hex encoding)
 
-### Step 3: Create Your Wallet Address
+### Step 3: Create Your Wallet Addresses
 ```bash
-# Build address from public key (directly in mounted directory)
+# First, generate staking keys (needed for full functionality)
+./cli.sh conway stake-address key-gen \
+  --verification-key-file keys/stake.vkey \
+  --signing-key-file keys/stake.skey
+
+# Build enterprise address (payment only)
 ./cli.sh address build \
   --payment-verification-key-file keys/payment.vkey \
   --testnet-magic 2 \
-  --out-file keys/wallet.addr
+  --out-file keys/enterprise.addr
 
-# Save address to variable for easy reuse
-WALLET_ADDR=$(cat keys/wallet.addr)
-echo "🏠 Your wallet address: $WALLET_ADDR"
-echo "📁 Address saved to keys/wallet.addr"
-echo "💡 Address length: ${#WALLET_ADDR} characters"
-```
-
-### Multiple Address Types
-```bash
-# Generate staking keys
-./cli.sh stake-address key-gen \
-  --verification-key-file keys/stake.vkey \
-  --signing-key-file keys/stake.skey
-  
-# Build base address (payment + staking)
+# Build base address (payment + staking) - RECOMMENDED!
 ./cli.sh address build \
   --payment-verification-key-file keys/payment.vkey \
   --stake-verification-key-file keys/stake.vkey \
   --testnet-magic 2 \
   --out-file keys/base.addr
 
-# Build stake address
-./cli.sh stake-address build \
+# Build stake address (for receiving rewards)
+./cli.sh conway stake-address build \
   --stake-verification-key-file keys/stake.vkey \
   --testnet-magic 2 \
   --out-file keys/stake.addr
 
-echo "Enterprise address: $(cat keys/wallet.addr)"
-echo "Base address: $(cat keys/base.addr)"  
-echo "Stake address: $(cat keys/stake.addr)"
+# Use base address as primary wallet (best practice)
+WALLET_ADDR=$(cat keys/base.addr)
+echo "🏠 Your main wallet address (base): $WALLET_ADDR"
+echo "💡 Address length: ${#WALLET_ADDR} characters"
 ```
-**💡 Explanation**: Address is derived from your public key using cryptographic hashing. Format is "bech32" encoding starting with `addr_test1` (testnet).
+
+
+**💡 Address Types Explained**:
+- **Enterprise** (`addr_test1v...`): Payment only, smaller, no staking
+- **Base** (`addr_test1q...`): Payment + staking, full functionality ✅  
+- **Stake** (`stake_test1...`): Receives staking rewards only
+
+```bash
+# Compare the different address types
+echo "Address Comparison:"
+echo "Enterprise (payment only): $(cat keys/enterprise.addr)"
+echo "Base (payment + stake): $(cat keys/base.addr)"
+echo "Stake (rewards only): $(cat keys/stake.addr)"
+```
 
 ## Part 2: Checking Balances 💰
 
 ### Step 4: Check Your Empty Wallet
+
+⚠️  **NOTE**: UTXO queries work with partial sync but may be incomplete until >90%
+
 ```bash
+# Check sync status
+./cli.sh query tip --testnet-magic 2
+
 # Make sure address variable is set (run this if you're in a new terminal)
-WALLET_ADDR=$(cat keys/wallet.addr)
-echo "Checking UTXOs for: $WALLET_ADDR"
+WALLET_ADDR=$(cat keys/base.addr)
+echo "Checking UTXOs for base address: $WALLET_ADDR"
 
 # Query UTXOs (Unspent Transaction Outputs) = your balance
 ./cli.sh query utxo --address $WALLET_ADDR --testnet-magic 2
 
 echo "💡 Empty wallet = no UTXOs shown (empty {} or table)"
+echo "💡 If recently funded, may take time to appear during sync"
 ```
 
 **💡 UTXO Explanation**: 
@@ -103,13 +115,14 @@ echo "💡 Empty wallet = no UTXOs shown (empty {} or table)"
 
 ### Step 5: Get Testnet ADA (Free Money!)
 ```bash
-echo "🚰 Fund your wallet with testnet faucet:"
+echo "😰 Fund your base address with testnet faucet:"
 echo "1. Visit: https://docs.cardano.org/cardano-testnets/tools/faucet/"
-echo "2. Enter your address: $WALLET_ADDR"
+echo "2. Enter your BASE address: $WALLET_ADDR"
 echo "3. Complete captcha and request ADA"
 echo "4. Wait 30-60 seconds..."
 echo ""
-echo "💡 Bookmark this address for easy copy/paste: $WALLET_ADDR"
+echo "💡 Why base address? It can stake for rewards (~5% APY)"
+echo "💡 Bookmark this address: $WALLET_ADDR"
 ```
 
 **During the wait, let's create a second wallet...**
@@ -138,9 +151,9 @@ echo "💡 Recipient address length: ${#RECIPIENT_ADDR} characters"
 
 ### Step 7: Check If Funding Arrived
 ```bash
-echo "💰 Checking your wallet balance..."
+echo "💰 Checking your base address balance..."
 # Ensure variable is set
-WALLET_ADDR=$(cat keys/wallet.addr)
+WALLET_ADDR=$(cat keys/base.addr)
 ./cli.sh query utxo --address $WALLET_ADDR --testnet-magic 2
 
 # If you see UTXOs with ADA amounts, you're funded! 
@@ -159,11 +172,20 @@ a1b2c3d4e5f6...                                                    0        1000
 ## Part 4: Send Your First Transaction 📤
 
 ### Step 8: Build the Transaction
+
+⚠️  **SYNC REQUIREMENT**: Your node must be >90% synced for transactions to work.
 ```bash
+# Check sync status first
+./cli.sh query tip --testnet-magic 2
+# Look for "syncProgress" - need >0.90 (90%)
+
+# If not synced enough, you can still demo transaction building (it will work)
+# But submission will fail until >90% synced
+
 # Ensure variables are set (important if starting fresh terminal)
-WALLET_ADDR=$(cat keys/wallet.addr)
+WALLET_ADDR=$(cat keys/base.addr)  # Use base address (staking-enabled)
 RECIPIENT_ADDR=$(cat keys/recipient.addr)
-echo "Sender: $WALLET_ADDR"
+echo "Sender (base address): $WALLET_ADDR"
 echo "Recipient: $RECIPIENT_ADDR"
 
 # Get protocol parameters (fees, limits, etc.)
@@ -206,18 +228,34 @@ echo "✅ Transaction signed!"
 **💡 Digital Signature**: Proves you own the UTXO without revealing your private key.
 
 ### Step 10: Submit to the Network
+
+⚠️  **This will only work if your node is >90% synced!**
+
 ```bash
-echo "📡 Submitting transaction to Cardano network..."
-./cli.sh transaction submit \
-  --tx-file transactions/tx.signed \
-  --testnet-magic 2
+# Check sync status again before submitting
+SYNC_STATUS=$(./cli.sh query tip --testnet-magic 2 | grep syncProgress | cut -d'"' -f4)
+echo "Current sync progress: $(echo "$SYNC_STATUS * 100" | bc -l)%"
 
-echo "🎉 Transaction submitted!"
-
-# Get the transaction ID for tracking
-TX_ID=$(./cli.sh transaction txid --tx-file transactions/tx.signed)
-echo "🆔 Transaction ID: $TX_ID"
-echo "🔍 View on explorer: https://preview.cardanoscan.io/transaction/$TX_ID"
+if (( $(echo "$SYNC_STATUS > 0.90" | bc -l) )); then
+    echo "✅ Node is synced! Submitting transaction..."
+    ./cli.sh transaction submit \
+      --tx-file transactions/tx.signed \
+      --testnet-magic 2
+    
+    echo "🎉 Transaction submitted!"
+    
+    # Get the transaction ID for tracking
+    TX_ID=$(./cli.sh transaction txid --tx-file transactions/tx.signed)
+    echo "🆔 Transaction ID: $TX_ID"
+    echo "🔍 View on explorer: https://preview.cardanoscan.io/transaction/$TX_ID"
+else
+    echo "⏳ Node is still syncing (${SYNC_STATUS})"  
+    echo "Transaction built and signed successfully, but submission requires >90% sync"
+    echo "You can:"
+    echo "  1. Wait for sync to complete (./check-sync.sh to monitor)"
+    echo "  2. Submit later when synced"
+    echo "  3. Use the transaction as a teaching example"
+fi
 ```
 
 ### Step 11: Verify the Transaction
@@ -242,7 +280,11 @@ Open your `keys/` directory in VS Code and examine:
 keys/
 ├── payment.vkey      # ✅ Your public key (JSON)
 ├── payment.skey      # ❌ Your private key (SECRET!)
-├── wallet.addr       # 🏠 Your wallet address  
+├── stake.vkey        # ✅ Your staking public key
+├── stake.skey        # ❌ Your staking private key (SECRET!)
+├── enterprise.addr   # 🏠 Enterprise address (payment only)
+├── base.addr         # 🏠 Base address (payment + staking) ✅
+├── stake.addr        # 🎯 Stake address (rewards)
 └── recipient.addr    # 👤 Where we sent money
 ```
 
@@ -314,7 +356,7 @@ echo "🎯 Base address (with staking): $(cat keys/base.addr)"
 echo "WALLET_ADDR='$WALLET_ADDR'"  # Should show your address
 
 # Fix by reloading from file:
-WALLET_ADDR=$(cat keys/wallet.addr)
+WALLET_ADDR=$(cat keys/base.addr)  # Use base address
 RECIPIENT_ADDR=$(cat keys/recipient.addr)
 
 # Verify they're set:
@@ -325,7 +367,7 @@ echo "Recipient: $RECIPIENT_ADDR"
 ### Transaction Failed
 ```bash
 # Check if UTXO still exists (not already spent)
-WALLET_ADDR=$(cat keys/wallet.addr)  # Ensure variable is set
+WALLET_ADDR=$(cat keys/base.addr)  # Ensure variable is set
 ./cli.sh query utxo --address $WALLET_ADDR --testnet-magic 2
 
 # Check node is synced
