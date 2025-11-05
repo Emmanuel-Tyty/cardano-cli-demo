@@ -1,0 +1,41 @@
+# Cardano CLI Demo - Generated Files
+# These files contain sensitive keys and should not be committed
+
+# Key files (contain private keys!)
+keys/*.skey
+keys/payment.skey
+keys/recipient.skey
+keys/stake.skey
+
+# Personal wallet addresses (optional to ignore)
+# keys/*.addr
+
+# Transaction files  
+transactions/
+*.raw
+*.signed
+
+# Container files
+container-files/
+
+# Docker volumes
+.docker/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/

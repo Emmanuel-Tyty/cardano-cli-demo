@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  cardano-node:
+    image: ghcr.io/intersectmbo/cardano-node:latest
+    container_name: cardano-cli-demo-node
+    environment:
+      - NETWORK=preview
+    volumes:
+      - cardano-data:/data/db
+      - cardano-ipc:/ipc
+    ports:
+      - "3001:3001"
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
+
+volumes:
+  cardano-data:
+  cardano-ipc:
