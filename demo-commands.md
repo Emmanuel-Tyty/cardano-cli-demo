@@ -16,18 +16,13 @@ Follow along with these commands during the live session. Each step includes exp
 
 ### Step 1: Generate Your Wallet Keys
 ```bash
-# Generate payment keys (in the Docker container)
-docker-compose -f ../cardano-node/docker-compose.yml exec \
-  -e CARDANO_NODE_SOCKET_PATH=/ipc/node.socket \
-  cardano-node cardano-cli address key-gen \
-  --verification-key-file /tmp/payment.vkey \
-  --signing-key-file /tmp/payment.skey
+# Generate payment keys (directly in mounted directory)
+./cli.sh address key-gen \
+  --verification-key-file keys/payment.vkey \
+  --signing-key-file keys/payment.skey
 
-# Copy keys to local directory (so we can see them in VS Code)
-docker cp $(docker-compose -f ../cardano-node/docker-compose.yml ps -q cardano-node):/tmp/payment.vkey ./keys/
-docker cp $(docker-compose -f ../cardano-node/docker-compose.yml ps -q cardano-node):/tmp/payment.skey ./keys/
-
-echo "✅ Keys generated!"
+echo "✅ Keys generated in keys/ directory!"
+echo "💡 Open VS Code to see the files: code ."
 ```
 
 **💡 Explanation**: 
@@ -48,20 +43,16 @@ head -c 100 keys/payment.skey && echo "..."
 
 ### Step 3: Create Your Wallet Address
 ```bash
-# Build address from public key
-docker-compose -f ../cardano-node/docker-compose.yml exec \
-  -e CARDANO_NODE_SOCKET_PATH=/ipc/node.socket \
-  cardano-node cardano-cli address build \
-  --payment-verification-key-file /tmp/payment.vkey \
+# Build address from public key (directly in mounted directory)
+./cli.sh address build \
+  --payment-verification-key-file keys/payment.vkey \
   --testnet-magic 2 \
-  --out-file /tmp/wallet.addr
-
-# Copy to local
-docker cp $(docker-compose -f ../cardano-node/docker-compose.yml ps -q cardano-node):/tmp/wallet.addr ./keys/
+  --out-file keys/wallet.addr
 
 # Save address to variable for easy reuse
 WALLET_ADDR=$(cat keys/wallet.addr)
 echo "🏠 Your wallet address: $WALLET_ADDR"
+echo "📁 Address saved to keys/wallet.addr"
 ```
 
 **💡 Explanation**: Address is derived from your public key using cryptographic hashing. Format is "bech32" encoding starting with `addr_test1` (testnet).
@@ -98,26 +89,20 @@ echo "💡 Bookmark this address for easy copy/paste: $WALLET_ADDR"
 
 ### Step 6: Generate Recipient Keys
 ```bash
-# Generate second wallet
-docker-compose -f ../cardano-node/docker-compose.yml exec \
-  -e CARDANO_NODE_SOCKET_PATH=/ipc/node.socket \
-  cardano-node cardano-cli address key-gen \
-  --verification-key-file /tmp/recipient.vkey \
-  --signing-key-file /tmp/recipient.skey
+# Generate second wallet keys
+./cli.sh address key-gen \
+  --verification-key-file keys/recipient.vkey \
+  --signing-key-file keys/recipient.skey
 
-# Build recipient address  
-docker-compose -f ../cardano-node/docker-compose.yml exec \
-  -e CARDANO_NODE_SOCKET_PATH=/ipc/node.socket \
-  cardano-node cardano-cli address build \
-  --payment-verification-key-file /tmp/recipient.vkey \
+# Build recipient address
+./cli.sh address build \
+  --payment-verification-key-file keys/recipient.vkey \
   --testnet-magic 2 \
-  --out-file /tmp/recipient.addr
-
-# Copy locally
-docker cp $(docker-compose -f ../cardano-node/docker-compose.yml ps -q cardano-node):/tmp/recipient.addr ./keys/
+  --out-file keys/recipient.addr
 
 RECIPIENT_ADDR=$(cat keys/recipient.addr)
 echo "👤 Recipient address: $RECIPIENT_ADDR"
+echo "📁 Files saved in keys/ directory"
 ```
 
 ### Step 7: Check If Funding Arrived
@@ -143,7 +128,7 @@ a1b2c3d4e5f6...                                                    0        1000
 ### Step 8: Build the Transaction
 ```bash
 # Get protocol parameters (fees, limits, etc.)
-./cli.sh query protocol-parameters --testnet-magic 2 --out-file /tmp/protocol.json
+./cli.sh query protocol-parameters --testnet-magic 2 --out-file transactions/protocol.json
 
 # Find a UTXO to spend (automatically picks the first one)
 UTXO=$(./cli.sh query utxo --address $WALLET_ADDR --testnet-magic 2 | grep -o '^[a-f0-9]*#[0-9]*' | head -1)
@@ -156,9 +141,9 @@ echo "🔨 Building transaction..."
   --tx-out "$RECIPIENT_ADDR+5000000" \
   --change-address $WALLET_ADDR \
   --testnet-magic 2 \
-  --out-file /tmp/tx.raw
+  --out-file transactions/tx.raw
 
-echo "✅ Transaction built!"
+echo "✅ Transaction built in transactions/ directory!"
 ```
 
 **💡 Transaction Components**:
@@ -171,10 +156,10 @@ echo "✅ Transaction built!"
 ```bash
 echo "🔐 Signing transaction with your private key..."
 ./cli.sh transaction sign \
-  --tx-body-file /tmp/tx.raw \
-  --signing-key-file /tmp/payment.skey \
+  --tx-body-file transactions/tx.raw \
+  --signing-key-file keys/payment.skey \
   --testnet-magic 2 \
-  --out-file /tmp/tx.signed
+  --out-file transactions/tx.signed
 
 echo "✅ Transaction signed!"
 ```
@@ -185,13 +170,13 @@ echo "✅ Transaction signed!"
 ```bash
 echo "📡 Submitting transaction to Cardano network..."
 ./cli.sh transaction submit \
-  --tx-file /tmp/tx.signed \
+  --tx-file transactions/tx.signed \
   --testnet-magic 2
 
 echo "🎉 Transaction submitted!"
 
 # Get the transaction ID for tracking
-TX_ID=$(./cli.sh transaction txid --tx-file /tmp/tx.signed)
+TX_ID=$(./cli.sh transaction txid --tx-file transactions/tx.signed)
 echo "🆔 Transaction ID: $TX_ID"
 echo "🔍 View on explorer: https://preview.cardanoscan.io/transaction/$TX_ID"
 ```

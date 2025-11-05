@@ -6,9 +6,18 @@ services:
     container_name: cardano-cli-demo-node
     environment:
       - NETWORK=preview
+      - CARDANO_NODE_SOCKET_PATH=/ipc/node.socket
     volumes:
+      # Blockchain data (persistent)
       - cardano-data:/data/db
       - cardano-ipc:/ipc
+      # Local directories for file creation
+      - ./keys:/workspace/keys
+      - ./transactions:/workspace/transactions
+      - ./examples:/workspace/examples
+      # Working directory
+      - .:/workspace
+    working_dir: /workspace
     ports:
       - "3001:3001"
     restart: unless-stopped
