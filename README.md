@@ -45,6 +45,13 @@ docker-compose up -d
 # Check node is running
 docker-compose ps
 
+# Check sync progress
+./cli.sh query tip --testnet-magic 2
+# Look for "syncProgress" - need >0.90 for transactions
+
+# Monitor sync progress (optional)
+./check-sync.sh
+
 # Create demo workspace
 mkdir keys transactions
 ```
@@ -54,8 +61,9 @@ mkdir keys transactions
 Follow these guides in order:
 
 1. **[Setup Guide](./setup.md)** - Get your environment ready
-2. **[Live Demo Commands](./demo-commands.md)** - Step-by-step CLI commands  
-3. **[Key Concepts](./concepts.md)** - Understanding what we're doing
+2. **[Quick Demo](./quick-demo.md)** - For unsynced nodes (<90%)
+3. **[Live Demo Commands](./demo-commands.md)** - Full demo (needs >90% sync)
+4. **[Key Concepts](./concepts.md)** - Understanding what we're doing
 
 ## 🎯 What You'll Learn
 

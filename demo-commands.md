@@ -9,7 +9,7 @@ Follow along with these commands during the live session. Each step includes exp
 ./cli.sh query tip --testnet-magic 2
 
 # Should show: block, epoch, era, syncProgress
-# If syncProgress < 0.90, transactions won't work yet (but we can still generate keys!)
+# If syncProgress < 90%, transactions won't work yet (but we can still generate keys!)
 ```
 
 ## Part 1: Understanding Keys & Addresses 🔐
