@@ -56,6 +56,30 @@ echo "📁 Address saved to keys/wallet.addr"
 echo "💡 Address length: ${#WALLET_ADDR} characters"
 ```
 
+### Multiple Address Types
+```bash
+# Generate staking keys
+./cli.sh stake-address key-gen \
+  --verification-key-file keys/stake.vkey \
+  --signing-key-file keys/stake.skey
+  
+# Build base address (payment + staking)
+./cli.sh address build \
+  --payment-verification-key-file keys/payment.vkey \
+  --stake-verification-key-file keys/stake.vkey \
+  --testnet-magic 2 \
+  --out-file keys/base.addr
+
+# Build stake address
+./cli.sh stake-address build \
+  --stake-verification-key-file keys/stake.vkey \
+  --testnet-magic 2 \
+  --out-file keys/stake.addr
+
+echo "Enterprise address: $(cat keys/wallet.addr)"
+echo "Base address: $(cat keys/base.addr)"  
+echo "Stake address: $(cat keys/stake.addr)"
+```
 **💡 Explanation**: Address is derived from your public key using cryptographic hashing. Format is "bech32" encoding starting with `addr_test1` (testnet).
 
 ## Part 2: Checking Balances 💰
@@ -259,22 +283,18 @@ keys/
 ### Generate More Addresses
 ```bash
 # Generate staking keys for delegation
-docker-compose -f ../cardano-node/docker-compose.yml exec \
-  -e CARDANO_NODE_SOCKET_PATH=/ipc/node.socket \
-  cardano-node cardano-cli stake-address key-gen \
-  --verification-key-file /tmp/stake.vkey \
-  --signing-key-file /tmp/stake.skey
+./cli.sh conway stake-address key-gen \
+  --verification-key-file keys/stake.vkey \
+  --signing-key-file keys/stake.skey
 
 # Build base address (payment + staking)
-docker-compose -f ../cardano-node/docker-compose.yml exec \
-  -e CARDANO_NODE_SOCKET_PATH=/ipc/node.socket \
-  cardano-node cardano-cli address build \
-  --payment-verification-key-file /tmp/payment.vkey \
-  --stake-verification-key-file /tmp/stake.vkey \
+./cli.sh address build \
+  --payment-verification-key-file keys/payment.vkey \
+  --stake-verification-key-file keys/stake.vkey \
   --testnet-magic 2 \
-  --out-file /tmp/base.addr
+  --out-file keys/base.addr
 
-echo "🎯 Base address (with staking): $(cat /tmp/base.addr)"
+echo "🎯 Base address (with staking): $(cat keys/base.addr)"
 ```
 
 ### Explore the Blockchain

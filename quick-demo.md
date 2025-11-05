@@ -37,7 +37,7 @@ echo "Address length: ${#WALLET_ADDR} characters"
 ### 3. Multiple Address Types
 ```bash
 # Generate staking keys
-./cli.sh stake-address key-gen \
+./cli.sh conway stake-address key-gen \
   --verification-key-file keys/stake.vkey \
   --signing-key-file keys/stake.skey
 
@@ -49,7 +49,7 @@ echo "Address length: ${#WALLET_ADDR} characters"
   --out-file keys/base.addr
 
 # Build stake address
-./cli.sh stake-address build \
+./cli.sh conway stake-address build \
   --stake-verification-key-file keys/stake.vkey \
   --testnet-magic 2 \
   --out-file keys/stake.addr
