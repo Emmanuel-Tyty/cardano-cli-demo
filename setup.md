@@ -29,24 +29,12 @@ All commands should work without errors.
 # Clone this demo repository
 git clone https://github.com/your-username/cardano-cli-demo.git
 cd cardano-cli-demo
-
-# Clone the official Cardano node (in a sibling directory)
-cd ..
-git clone https://github.com/IntersectMBO/cardano-node.git
-cd cardano-cli-demo
 ```
 
 ### 2. Start the Cardano Node
 ```bash
 # Navigate to cardano-node
-cd ../cardano-node
-
-# Set environment for preview testnet
-export NETWORK=preview
-export CARDANO_NODE_VERSION=latest
-
-# Start the node (this will take a few minutes to download)
-docker-compose up -d
+docker compose up -d
 
 # Check it's running
 docker-compose ps
@@ -54,9 +42,6 @@ docker-compose ps
 
 ### 3. Setup Demo Environment
 ```bash
-# Return to demo directory
-cd ../cardano-cli-demo
-
 # Create directories for our files
 mkdir keys transactions
 

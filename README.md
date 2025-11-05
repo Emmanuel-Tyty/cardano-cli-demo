@@ -16,35 +16,10 @@ Welcome to the Cardano CLI hands-on demo! This repository contains everything yo
 ```bash
 git clone https://github.com/your-username/cardano-cli-demo.git
 cd cardano-cli-demo
-```
-
-### 2. Setup Node (Two Options)
-
-#### Option A: Use Intersect Cardano Node (Recommended)
-```bash
-# Clone the official node repository
-git clone https://github.com/IntersectMBO/cardano-node.git
-cd cardano-node
-
-# Start preview testnet
-export NETWORK=preview
-export CARDANO_NODE_VERSION=latest
-docker-compose up -d
-
-cd ../cardano-cli-demo
-```
-
-#### Option B: Use Provided Docker Compose
-```bash
-# Use the included docker-compose.yml
 docker-compose up -d
 ```
 
-### 3. Verify Setup
-```bash
-# Check node is running
-docker-compose ps
-
+``` bash
 # Check sync progress
 ./cli.sh query tip --testnet-magic 2
 # Look for "syncProgress" - need >0.90 for transactions
