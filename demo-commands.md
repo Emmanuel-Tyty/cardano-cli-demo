@@ -53,6 +53,7 @@ head -c 100 keys/payment.skey && echo "..."
 WALLET_ADDR=$(cat keys/wallet.addr)
 echo "🏠 Your wallet address: $WALLET_ADDR"
 echo "📁 Address saved to keys/wallet.addr"
+echo "💡 Address length: ${#WALLET_ADDR} characters"
 ```
 
 **💡 Explanation**: Address is derived from your public key using cryptographic hashing. Format is "bech32" encoding starting with `addr_test1` (testnet).
@@ -61,10 +62,14 @@ echo "📁 Address saved to keys/wallet.addr"
 
 ### Step 4: Check Your Empty Wallet
 ```bash
+# Make sure address variable is set (run this if you're in a new terminal)
+WALLET_ADDR=$(cat keys/wallet.addr)
+echo "Checking UTXOs for: $WALLET_ADDR"
+
 # Query UTXOs (Unspent Transaction Outputs) = your balance
 ./cli.sh query utxo --address $WALLET_ADDR --testnet-magic 2
 
-echo "💡 Empty wallet = no UTXOs shown"
+echo "💡 Empty wallet = no UTXOs shown (empty {} or table)"
 ```
 
 **💡 UTXO Explanation**: 
@@ -100,14 +105,18 @@ echo "💡 Bookmark this address for easy copy/paste: $WALLET_ADDR"
   --testnet-magic 2 \
   --out-file keys/recipient.addr
 
+# Set recipient address variable
 RECIPIENT_ADDR=$(cat keys/recipient.addr)
 echo "👤 Recipient address: $RECIPIENT_ADDR"
 echo "📁 Files saved in keys/ directory"
+echo "💡 Recipient address length: ${#RECIPIENT_ADDR} characters"
 ```
 
 ### Step 7: Check If Funding Arrived
 ```bash
 echo "💰 Checking your wallet balance..."
+# Ensure variable is set
+WALLET_ADDR=$(cat keys/wallet.addr)
 ./cli.sh query utxo --address $WALLET_ADDR --testnet-magic 2
 
 # If you see UTXOs with ADA amounts, you're funded! 
@@ -127,6 +136,12 @@ a1b2c3d4e5f6...                                                    0        1000
 
 ### Step 8: Build the Transaction
 ```bash
+# Ensure variables are set (important if starting fresh terminal)
+WALLET_ADDR=$(cat keys/wallet.addr)
+RECIPIENT_ADDR=$(cat keys/recipient.addr)
+echo "Sender: $WALLET_ADDR"
+echo "Recipient: $RECIPIENT_ADDR"
+
 # Get protocol parameters (fees, limits, etc.)
 ./cli.sh query protocol-parameters --testnet-magic 2 --out-file transactions/protocol.json
 
@@ -271,11 +286,26 @@ echo "🎯 Base address (with staking): $(cat /tmp/base.addr)"
 ./cli.sh query protocol-parameters --testnet-magic 2 | jq '.minFeeA, .minFeeB'
 ```
 
-## Troubleshooting 🛠️
+## Troubleshooting 🔧
+
+### Address Variable Issues
+```bash
+# If you get "unexpected -" error, your address variable isn't set:
+echo "WALLET_ADDR='$WALLET_ADDR'"  # Should show your address
+
+# Fix by reloading from file:
+WALLET_ADDR=$(cat keys/wallet.addr)
+RECIPIENT_ADDR=$(cat keys/recipient.addr)
+
+# Verify they're set:
+echo "Wallet: $WALLET_ADDR"
+echo "Recipient: $RECIPIENT_ADDR"
+```
 
 ### Transaction Failed
 ```bash
 # Check if UTXO still exists (not already spent)
+WALLET_ADDR=$(cat keys/wallet.addr)  # Ensure variable is set
 ./cli.sh query utxo --address $WALLET_ADDR --testnet-magic 2
 
 # Check node is synced

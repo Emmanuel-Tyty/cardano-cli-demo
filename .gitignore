@@ -2,13 +2,7 @@
 # These files contain sensitive keys and should not be committed
 
 # Key files (contain private keys!)
-keys/*.skey
-keys/payment.skey
-keys/recipient.skey
-keys/stake.skey
-
-# Personal wallet addresses (optional to ignore)
-# keys/*.addr
+keys/
 
 # Transaction files
 transactions/

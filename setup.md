@@ -154,16 +154,3 @@ Once setup is complete:
 2. **Open VS Code** in this directory to view files we create
 3. **Have the testnet faucet ready**: https://docs.cardano.org/cardano-testnets/tools/faucet/
 4. **Follow along** with the [Demo Commands](./demo-commands.md)
-
-## Pre-Demo Checklist
-
-- [ ] Cardano node running (`docker-compose ps`)
-- [ ] CLI helper working (`./cli.sh query tip --testnet-magic 2`)
-- [ ] VS Code open in demo directory
-- [ ] Testnet faucet bookmarked
-- [ ] Terminal ready for commands
-- [ ] ~2 hours for the full session
-
----
-
-**Having issues?** Check the [troubleshooting section in README](./README.md#-troubleshooting) or ask for help during the live session!
